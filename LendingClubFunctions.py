@@ -5,15 +5,6 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy.ma as ma
 import datetime as dt
-from sklearn.preprocessing import scale, PolynomialFeatures
-from sklearn import linear_model, datasets
-from sklearn.cross_validation import train_test_split, cross_val_score
-from sklearn.linear_model import LogisticRegression
-from sklearn import metrics, grid_search
-from sklearn.svm import SVC
-from sklearn.metrics import roc_curve, auc
-from sklearn.learning_curve import learning_curve
-from sklearn.ensemble import RandomForestClassifier
 plt.style.use('ggplot')
 
 
@@ -148,85 +139,3 @@ def CleanData(df, Trouble=[], Success=[]):
     
     return df
 
-#Plot the distribution of lost principal
-def PlotLostPrin(df):
-
-    plt.figure(1)
-    plt.clf()
-    ax1=plt.hist((df[(df['loan_status']==bin(0)) & (df.funded_amnt_inv>1)].PerLoss).as_matrix()*100, bins=50,  color='crimson', label='Charged off/in default', stacked=True, histtype='barstacked', alpha=1)
-    plt.xlabel('Fraction of Initial Loan Amount Lost (in percent)', fontsize=20)
-    plt.ylabel('Frequency of Loss', fontsize=20)
-    plt.title('Principal Lost When Borrower Fails to Pay', fontsize=20)
-    plt.xticks(fontsize=12)
-    plt.yticks(fontsize=12)
-    plt.show()
-
-
-#Function to plot default rates among different home owners
-def PlotHomeOwnership(df, ax):
-    
-    group1=df.groupby(['loan_status','OldHome']).count().loan_amnt
-    totals=df.groupby(['OldHome']).count().loan_amnt
-    Lost=100.*group1.ix['0b0']/totals
-    ax=Lost[['RENT', 'OWN', 'MORTGAGE']].plot(kind='bar',  color='burlywood', fontsize=15, ax=ax)
-    ax.set_xlabel('Living Situation')
-    ax.set_ylabel('Default Rate (%)')
-    ax.set_title('Home Ownership')
-    ax.xaxis.label.set_fontsize(20)
-    ax.yaxis.label.set_fontsize(20)
-    ax.title.set_fontsize(20)
-
-    
-#Function to plot default rates by credit length
-def PlotCreditLength(df, ax):
-    
-    group1=df.groupby(['loan_status', pd.cut(df.earliest_cr_line, 6)])
-    total=df.groupby([ pd.cut(df.earliest_cr_line, 6)])
-    
-    
-    Lost=100.0*group1.count().loan_amnt.ix['0b0']/total.count().loan_amnt
-    Lost.index=total.mean().earliest_cr_line.apply(round)
-    ax=Lost.plot(kind='bar',  color='burlywood', fontsize=15, ax=ax)
-    ax.set_xlabel('Months of Credit History')
-    ax.set_ylabel('Default Rate (%)')
-    ax.set_title('Credit Length')
-    ax.xaxis.label.set_fontsize(20)
-    ax.yaxis.label.set_fontsize(20)
-    ax.title.set_fontsize(20)
-    
-def PlotIntCat(df, ax):
-    
-    InterestRate=df.groupby('IntCat').mean().int_rate*100.
-    DefaultRate=100.*df.groupby(['loan_status','IntCat']).count().int_rate.ix['0b0']/df.groupby('IntCat').count().int_rate
-    Loss=df.groupby(['loan_status','IntCat']).mean().Loss.ix['0b0']
-    
-
-    ax=DefaultRate.plot(kind='bar', color='burlywood', label='Charged off/in default', fontsize=15, ax=ax)
-    ax.set_xlabel('Interest Rate Category')
-    ax.set_ylabel('Default Rate (%)')
-    ax.set_title('Interest Rate')
-    ax.xaxis.label.set_fontsize(20)
-    ax.yaxis.label.set_fontsize(20)
-    ax.title.set_fontsize(20)
-      
-    return pd.DataFrame([InterestRate , DefaultRate , Loss ], index=['AveIntRate', 'DefaultRate', 'AveLoss']).T    
-    
-#Function that plots the portion of defaulted and successful loans in each interest rate quartile
-def PlotFractions(df):
-    grouped=df.groupby(['loan_status', 'IntCat'])
-    PaidRates=(grouped.count()['int_rate'])['0b1']/((grouped.count()['int_rate'])['0b1'].sum())
-    LostRates=(grouped.count()['int_rate'])['0b0']/((grouped.count()['int_rate'])['0b0'].sum())
-
-    plt.figure(1)
-    plt.clf()
-    ax4=LostRates.plot(kind='bar', color='crimson', position=0, width=.25, label='Charged off/in default', fontsize=15)
-    ax5=PaidRates.plot(kind='bar', color='burlywood', position=1, width=.25, label= 'Paid in full', fontsize=15)
-    ax4.set_xlabel('Interest Rate Category')
-    ax4.set_ylabel('Fraction of Loans')
-    ax4.set_title('Fraction of Loans in Each Category')
-    plt.legend( loc='best', prop={'size':15})
-    ax4.xaxis.label.set_fontsize(20)
-    ax4.yaxis.label.set_fontsize(20)
-    ax4.title.set_fontsize(20)
-    plt.show()
-    
