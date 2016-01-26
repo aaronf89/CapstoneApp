@@ -136,6 +136,8 @@ def CleanData(df, Trouble=[], Success=[]):
     df['Fraction_Of_Total']=df.total_pymnt/(df.installment*df.term)
     df['PerLoss']=(df.total_pymnt-df.funded_amnt)/df.funded_amnt
     df['PerLossTerm']=(df.total_pymnt-df.installment*df.term)/(df.installment*df.term)
+    df.last_pymnt_d=pd.to_datetime(df.last_pymnt_d)
+    df.issue_d=pd.to_datetime(df.issue_d)
     
     return df
 
